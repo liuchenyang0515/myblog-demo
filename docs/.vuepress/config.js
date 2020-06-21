@@ -8,7 +8,7 @@ module.exports = {
       nav:[ // 导航栏配置
         {text: '首页', link: '/' },
         {text: '技术文档', link: '/tech/' },
-        {text: '简书主页', link: 'https://www.jianshu.com/u/c455567c7f50'}      
+        {text: 'CSDN主页', link: 'https://blog.csdn.net/qq_34115899'}      
       ],
       sidebar: 'auto', // 侧边栏配置
       sidebarDepth:2

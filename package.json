@@ -1,5 +1,5 @@
 {
-  "name": "vuePressProject",
+  "name": "my_blog",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,6 +10,6 @@
     "deploy": "bash deploy.sh"
   },
   "keywords": [],
-  "author": "",
+  "author": "liuchenyang",
   "license": "ISC"
 }
