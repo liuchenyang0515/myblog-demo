@@ -21,7 +21,7 @@
         v-if="data.tagline !== null"
         class="description"
       >
-        {{ data.tagline || $description || 'Welcome to your VuePress site' }}
+        {{ data.tagline || $description || 'Welcome to my site' }}
       </p>
 
       <p
