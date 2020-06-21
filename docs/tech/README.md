@@ -4,7 +4,7 @@
 
 ## 浏览器的渲染过程
 
-本文先从浏览器的渲染过程来从头到尾的讲解一下回流重绘，如果大家想直接看如何减少回流和重绘，可以跳到后面。（这个渲染过程来自[MDN][1]）
+本文先从浏览器的渲染过程来从头到尾的讲解一下回流重绘，如果大家想直接看如何减少回流和重绘，可以跳到后面。（这个渲染过程来自[MDN](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/render-tree-construction?hl=zh-cn)）
 
 ![DOM渲染](../img/dom_render.png)
 从上面这个图上，我们可以看到，浏览器渲染过程如下：
@@ -85,7 +85,7 @@
 * clientTop、clientLeft、clientWidth、clientHeight
 * getComputedStyle()
 * getBoundingClientRect
-* 具体可以访问这个网站：[gist.github.com/paulirish/5…][2]
+* 具体可以访问这个网站：[gist.github.com/paulirish/5…](https://gist.github.com/paulirish/5d52fb081b3570c81e3a)
 
 以上属性和方法都需要返回最新的布局信息，因此浏览器不得不清空队列，触发回流重绘来返回正确的值。因此，我们在修改样式的时候，**最好避免使用上面列出的属性，他们都会刷新渲染队列。**如果要使用它们，最好将值缓存起来。
 
@@ -195,7 +195,7 @@ appendDataToElement(clone, data);
 ul.parentNode.replaceChild(clone, ul);
 ```
 
-对于上述那种情况，我写了一个[demo][3]来测试修改前和修改后的性能。然而实验结果不是很理想。
+对于上述那种情况，我写了一个[demo](https://chenjigeng.github.io/example/share/%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E9%87%8D%E7%BB%98/%E6%89%B9%E9%87%8F%E4%BF%AE%E6%94%B9DOM.html)来测试修改前和修改后的性能。然而实验结果不是很理想。
 
 **原因：原因其实上面也说过了，浏览器会使用队列来储存多次修改，进行优化，所以对这个优化方案，我们其实不用优先考虑。**
 
@@ -222,11 +222,11 @@ function initP() {
 }
 ```
 
-同样，我也写了个[demo][4]来比较两者的性能差异。你可以自己点开这个demo体验下。这个对比差距就比较明显。
+同样，我也写了个[demo](https://chenjigeng.github.io/example/share/%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E9%87%8D%E7%BB%98/%E9%81%BF%E5%85%8D%E5%BF%AB%E9%80%9F%E8%BF%9E%E7%BB%AD%E7%9A%84%E5%B8%83%E5%B1%80.html)来比较两者的性能差异。你可以自己点开这个demo体验下。这个对比差距就比较明显。
 
 ### 对于复杂动画效果,使用绝对定位让其脱离文档流
 
-对于复杂动画效果，由于会经常的引起回流重绘，因此，我们可以使用绝对定位，让它脱离文档流。否则会引起父元素以及后续元素频繁的回流。这个我们就直接上个[例子][5]。
+对于复杂动画效果，由于会经常的引起回流重绘，因此，我们可以使用绝对定位，让它脱离文档流。否则会引起父元素以及后续元素频繁的回流。这个我们就直接上个[例子](https://chenjigeng.github.io/example/share/%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E9%87%8D%E7%BB%98/%E5%B0%86%E5%A4%8D%E6%9D%82%E5%8A%A8%E7%94%BB%E6%B5%AE%E5%8A%A8%E5%8C%96.html)。
 
 打开这个例子后，我们可以打开控制台，控制台上会输出当前的帧数(虽然不准)。
 ![](../img/example_demo_animation.png)
@@ -251,7 +251,8 @@ function initP() {
 
 #### 效果
 
-我们可以先看个[例子][6]。我通过使用chrome的Performance捕获了一段时间的回流重绘情况，实际结果如下图：
+我们可以先看个[例子](https://chenjigeng.github.io/example/share/%E5%AF%B9%E6%AF%94gpu%E5%8A%A0%E9%80%9F/gpu%E5%8A%A0%E9%80%9F-transform.html)。我通过使用chrome的Performance捕获了一段时间的回流重绘情况，实际结果如下图：
+
 ![](../img/render_result_1.png)
 
 从图中我们可以看出，在动画进行的时候，没有发生任何的回流重绘。如果感兴趣你也可以自己做下实验。
@@ -269,3 +270,7 @@ function initP() {
 ## 总结
 
 本文主要讲了浏览器的渲染过程、浏览器的优化机制以及如何减少甚至避免回流和重绘，希望可以帮助大家更好的理解回流重绘。
+
+## 参考文献
+ - [渲染树构建、布局及绘制](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/render-tree-construction?hl=zh-cn)
+ - 高性能Javascript

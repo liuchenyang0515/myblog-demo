@@ -1,7 +1,7 @@
 ---
 home: true
 heroImage: /haizei.jpg
-actionText: 快速上手 →
+actionText: 博客目录预览 →
 actionLink: /zh/guide/
 features:
 - title: 简洁至上
