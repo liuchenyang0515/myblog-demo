@@ -1,7 +1,7 @@
 <template>
   <div class="theme-container">
     <div class="theme-default-content">
-      <h1>404</h1>
+      <h1>不好意思，你要找到这里没有~~~ o(╯□╰)o ~~~ 404</h1>
 
       <blockquote>{{ getMsg() }}</blockquote>
 

@@ -1,276 +1,151 @@
-# 你真的了解回流和重绘吗
+## 前言
 
-回流和重绘可以说是每一个web开发者都经常听到的两个词语，我也不例外，可是我之前一直不是很清楚这两步具体做了什么事情。最近由于部门内部要做分享，所以对其进行了一些研究，看了一些博客和书籍，整理了一些内容并且结合一些例子，写了这篇文章，希望可以帮助到大家。
+HTTP 的缓存机制，可以说这是前端工程师需要掌握的重要知识点之一。本文将针对 HTTP 缓存整体的流程做一个详细的讲解，争取做到大家读完整篇文章后，对缓存有一个整体的了解。
 
-## 浏览器的渲染过程
+HTTP 缓存分为 2 种，一种是强缓存，另一种是协商缓存。主要作用是可以加快资源获取速度，提升用户体验，减少网络传输，缓解服务端的压力。这是缓存运作的一个整体流程图：
+![tjhttp_1](../img/tjhttp_1.png)
 
-本文先从浏览器的渲染过程来从头到尾的讲解一下回流重绘，如果大家想直接看如何减少回流和重绘，可以跳到后面。（这个渲染过程来自[MDN](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/render-tree-construction?hl=zh-cn)）
+## 强缓存
 
-![DOM渲染](../img/dom_render.png)
-从上面这个图上，我们可以看到，浏览器渲染过程如下：
+不需要发送请求到服务端，直接读取浏览器本地缓存，在 Chrome 的 Network 中显示的 HTTP 状态码是 200 ，在 Chrome 中，强缓存又分为 Disk Cache (存放在硬盘中)和 Memory Cache (存放在内存中)，存放的位置是由浏览器控制的。是否强缓存由 Expires、Cache-Control 和 Pragma 3 个 Header 属性共同来控制。
 
-1. 解析HTML，生成DOM树，解析CSS，生成CSSOM树
-2. 将DOM树和CSSOM树结合，生成渲染树(Render Tree)
-3. Layout(回流):根据生成的渲染树，进行回流(Layout)，得到节点的几何信息（位置，大小）
-4. Painting(重绘):根据渲染树以及回流得到的几何信息，得到节点的绝对像素
-5. Display:将像素发送给GPU，展示在页面上。（这一步其实还有很多内容，比如会在GPU将多个合成层合并为同一个层，并展示在页面中。而css3硬件加速的原理则是新建合成层，这里我们不展开，之后有机会会写一篇博客）
+### ○ Expires
 
-渲染过程看起来很简单，让我们来具体了解下每一步具体做了什么。
+Expires 的值是一个 HTTP 日期，在浏览器发起请求时，会根据系统时间和 Expires 的值进行比较，如果系统时间超过了 Expires 的值，缓存失效。由于和系统时间进行比较，所以当系统时间和服务器时间不一致的时候，会有缓存有效期不准的问题。Expires 的优先级在三个 Header 属性中是最低的。
 
-### 生成渲染树
-![生成渲染树](../img/generate_render_tree.png)
+### ○ Cache-Control
 
-为了构建渲染树，浏览器主要完成了以下工作：
+Cache-Control 是 HTTP/1.1 中新增的属性，在请求头和响应头中都可以使用，常用的属性值如有：
 
-1. 从DOM树的根节点开始遍历每个可见节点。
-2. 对于每个可见的节点，找到CSSOM树中对应的规则，并应用它们。
-3. 根据每个可见节点以及其对应的样式，组合生成渲染树。
+* max-age：单位是秒，缓存时间计算的方式是距离发起的时间的秒数，超过间隔的秒数缓存失效
+* no-cache：不使用强缓存，需要与服务器验证缓存是否新鲜
+* no-store：禁止使用缓存（包括协商缓存），每次都向服务器请求最新的资源
+* private：专用于个人的缓存，中间代理、CDN 等不能缓存此响应
+* public：响应可以被中间代理、CDN 等缓存
+* must-revalidate：在缓存过期前可以使用，过期后必须向服务器验证
 
-第一步中，既然说到了要遍历可见的节点，那么我们得先知道，什么节点是不可见的。不可见的节点包括：
+### ○ Pragma
 
-* 一些不会渲染输出的节点，比如script、meta、link等。
-* 一些通过css进行隐藏的节点。比如display:none。注意，利用visibility和opacity隐藏的节点，还是会显示在渲染树上的。只有display:none的节点才不会显示在渲染树上。
+Pragma 只有一个属性值，就是 no-cache ，效果和 Cache-Control 中的 no-cache 一致，不使用强缓存，需要与服务器验证缓存是否新鲜，在 3 个头部属性中的优先级最高。
 
-**注意：渲染树只包含可见的节点**
+本地通过 express 起一个服务来验证强缓存的 3 个属性，代码如下：
 
-### 回流
-
-前面我们通过构造渲染树，我们将可见DOM节点以及它对应的样式结合起来，可是我们还需要计算它们在设备视口(viewport)内的确切位置和大小，这个计算的阶段就是回流。
-
-为了弄清每个对象在网站上的确切大小和位置，浏览器从渲染树的根节点开始遍历，我们可以以下面这个实例来表示：
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Critial Path: Hello world!</title>
-  </head>
-  <body>
-    <div style="width: 50%">
-      <div style="width: 50%">Hello world!</div>
-    </div>
-  </body>
-</html>
+```javascript
+const express = require('express');
+const app = express();
+var options = { 
+  etag: false, // 禁用协商缓存
+  lastModified: false, // 禁用协商缓存
+  setHeaders: (res, path, stat) => {
+    res.set('Cache-Control', 'max-age=10'); // 强缓存超时时间为10秒
+  },
+};
+app.use(express.static((__dirname + '/public'), options));
+app.listen(3000);
 ```
-我们可以看到，第一个div将节点的显示尺寸设置为视口宽度的50%，第二个div将其尺寸设置为父节点的50%。而在回流这个阶段，我们就需要根据视口具体的宽度，将其转为实际的像素值。（如下图）
-![渲染章节的viewport](../img/viewport_render__.png)
 
-### 重绘
+第一次加载，页面会向服务器请求数据，并在 Response Header 中添加 Cache-Control ，过期时间为 10 秒。
+![tjhttp_2](../img/tjhttp_2.png)
 
-最终，我们通过构造渲染树和回流阶段，我们知道了哪些节点是可见的，以及可见节点的样式和具体的几何信息(位置、大小)，那么我们就可以将渲染树的每个节点都转换为屏幕上的实际像素，这个阶段就叫做重绘节点。
+第二次加载，Date 头属性未更新，可以看到浏览器直接使用了强缓存，实际没有发送请求。
 
-既然知道了浏览器的渲染过程后，我们就来探讨下，何时会发生回流重绘。
+![tjhttp_3](../img/tjhttp_3.png)
 
-## 何时发生回流重绘
+过了 10 秒的超时时间之后，再次请求资源：
 
-我们前面知道了，回流这一阶段主要是计算节点的位置和几何信息，那么当页面布局和几何信息发生变化的时候，就需要回流。比如以下情况：
+![tjhttp_4](../img/tjhttp_4.png)
 
-* 添加或删除可见的DOM元素
-* 元素的位置发生变化
-* 元素的尺寸发生变化（包括外边距、内边框、边框大小、高度和宽度等）
-* 内容发生变化，比如文本变化或图片被另一个不同尺寸的图片所替代。
-* 页面一开始渲染的时候（这肯定避免不了）
-* 浏览器的窗口尺寸变化（因为回流是根据视口的大小来计算元素的位置和大小的）
+当 Pragma 和 Cache-Control 同时存在的时候，Pragma 的优先级高于 Cache-Control。
 
-**注意：回流一定会触发重绘，而重绘不一定会回流**
+![tjhttp_5](../img/tjhttp_5.png)
 
-根据改变的范围和程度，渲染树中或大或小的部分需要重新计算，有些改变会触发整个页面的重排，比如，滚动条出现的时候或者修改了根节点。
+## 协商缓存
 
-## 浏览器的优化机制
+当浏览器的强缓存失效的时候或者请求头中设置了不走强缓存，并且在请求头中设置了If-Modified-Since 或者 If-None-Match 的时候，会将这两个属性值到服务端去验证是否命中协商缓存，如果命中了协商缓存，会返回 304 状态，加载浏览器缓存，并且响应头会设置 Last-Modified 或者 ETag 属性。
 
-现代的浏览器都是很聪明的，由于每次重排都会造成额外的计算消耗，因此大多数浏览器都会通过队列化修改并批量执行来优化重排过程。浏览器会将修改操作放入到队列里，直到过了一段时间或者操作达到了一个阈值，才清空队列。但是！**当你获取布局信息的操作的时候，会强制队列刷新**，比如当你访问以下属性或者使用以下方法：
+### ○ ETag/If-None-Match
 
-* offsetTop、offsetLeft、offsetWidth、offsetHeight
-* scrollTop、scrollLeft、scrollWidth、scrollHeight
-* clientTop、clientLeft、clientWidth、clientHeight
-* getComputedStyle()
-* getBoundingClientRect
-* 具体可以访问这个网站：[gist.github.com/paulirish/5…](https://gist.github.com/paulirish/5d52fb081b3570c81e3a)
+ETag/If-None-Match 的值是一串 hash 码，代表的是一个资源的标识符，当服务端的文件变化的时候，它的 hash码会随之改变，通过请求头中的 If-None-Match 和当前文件的 hash 值进行比较，如果相等则表示命中协商缓存。ETag 又有强弱校验之分，如果 hash 码是以 "W/" 开头的一串字符串，说明此时协商缓存的校验是弱校验的，只有服务器上的文件差异（根据 ETag 计算方式来决定）达到能够触发 hash 值后缀变化的时候，才会真正地请求资源，否则返回 304 并加载浏览器缓存。
 
-以上属性和方法都需要返回最新的布局信息，因此浏览器不得不清空队列，触发回流重绘来返回正确的值。因此，我们在修改样式的时候，**最好避免使用上面列出的属性，他们都会刷新渲染队列。**如果要使用它们，最好将值缓存起来。
+### ○ Last-Modified/If-Modified-Since
 
-## 减少回流和重绘
+Last-Modified/If-Modified-Since 的值代表的是文件的最后修改时间，第一次请求服务端会把资源的最后修改时间放到 Last-Modified 响应头中，第二次发起请求的时候，请求头会带上上一次响应头中的 Last-Modified 的时间，并放到 If-Modified-Since 请求头属性中，服务端根据文件最后一次修改时间和 If-Modified-Since 的值进行比较，如果相等，返回 304 ，并加载浏览器缓存。
 
-好了，到了我们今天的重头戏，前面说了这么多背景和理论知识，接下来让我们谈谈如何减少回流和重绘。
+本地通过 express 起一个服务来验证协商缓存，代码如下：
 
-### 最小化重绘和重排
+```javascript
+const express = require('express');
+const app = express();
+var options = { 
+  etag: true, // 开启协商缓存
+  lastModified: true, // 开启协商缓存
+  setHeaders: (res, path, stat) => {
+    res.set({
+      'Cache-Control': 'max-age=00', // 浏览器不走强缓存
+      'Pragma': 'no-cache', // 浏览器不走强缓存
+    });
+  },
+};
+app.use(express.static((__dirname + '/public'), options));
+app.listen(3001);
+```
 
-由于重绘和重排可能代价比较昂贵，因此最好就是可以减少它的发生次数。为了减少发生次数，我们可以合并多次对DOM和样式的修改，然后一次处理掉。考虑这个例子
+第一次请求资源:
+
+![tjhttp_6](../img/tjhttp_6.png)
+
+第二次请求资源，服务端根据请求头中的 If-Modified-Since 和 If-None-Match 验证文件是否修改。
+
+![tjhttp_7](../img/tjhttp_7.png)
+
+我们再来验证一下 ETag 在强校验的情况下，只增加一行空格，hash 值如何变化，在代码中，我采用的是对文件进行 MD5 加密来计算其 hash 值。
+
+注：只是为了演示用，实际计算不是通过 MD5 加密的，Apache 默认通过 FileEtag 中 FileEtag INode Mtime Size 的配置自动生成 ETag，用户可以通过自定义的方式来修改文件生成 ETag 的方式。
+
+为了保证 lastModified 不影响缓存，我把通过 Last-Modified/If-Modified-Since 请求头删除了，源码如下：
     
 ```javascript
-const el = document.getElementById('test');
-el.style.padding = '5px';
-el.style.borderLeft = '1px';
-el.style.borderRight = '2px';
+const express = require('express');
+const CryptoJS = require('crypto-js/crypto-js');
+const fs = require('fs');
+const app = express();
+var options = { 
+  etag: true, // 只通过Etag来判断
+  lastModified: false, // 关闭另一种协商缓存
+  setHeaders: (res, path, stat) => {
+    const data = fs.readFileSync(path, 'utf-8'); // 读取文件
+    const hash = CryptoJS.MD5((JSON.stringify(data))); // MD5加密
+    res.set({
+      'Cache-Control': 'max-age=00', // 浏览器不走强缓存
+      'Pragma': 'no-cache', // 浏览器不走强缓存
+      'ETag': hash, // 手动设置Etag值为MD5加密后的hash值
+    });
+  },
+};
+app.use(express.static((__dirname + '/public'), options));
+app.listen(4000); // 使用新端口号，否则上面验证的协商缓存会一直存在
 ```
 
-例子中，有三个样式属性被修改了，每一个都会影响元素的几何结构，引起回流。当然，大部分现代浏览器都对其做了优化，因此，只会触发一次重排。但是如果在旧版的浏览器或者在上面代码执行的时候，有其他代码访问了布局信息(上文中的会触发回流的布局信息)，那么就会导致三次重排。
 
-因此，我们可以合并所有的改变然后依次处理，比如我们可以采取以下的方式：
+第一次和第二次请求如下：
 
-* 使用cssText
+![tjhttp_8](../img/tjhttp_8.png)
 
-```javascript
-const el = document.getElementById('test');
-el.style.cssText += 'border-left: 1px; border-right: 2px; padding: 5px;';
-```
+![tjhttp_9](../img/tjhttp_9.png)
 
-* 修改CSS的class
+然后我修改了 test.js ，增加一个空格后再删除一个空格，保持文件内容不变，但文件的修改时间改变，发起第三次请求，由于我生成 ETag 的方式是通过对文件内容进行 MD5 加密生成，所以虽然修改时间变化了，但请求依然返回了 304 ，读取浏览器缓存。
 
-```javascript
-const el = document.getElementById('test');
-el.className += ' active';
-```
+![tjhttp_10](../img/tjhttp_10.png)
 
-### 批量修改DOM
+ETag/If-None-Match 的出现主要解决了 Last-Modified/If-Modified-Since 所解决不了的问题：
 
-当我们需要对DOM对一系列修改的时候，可以通过以下步骤减少回流重绘次数：
-
-1. 使元素脱离文档流
-2. 对其进行多次修改
-3. 将元素带回到文档中。
-
-该过程的第一步和第三步可能会引起回流，但是经过第一步之后，对DOM的所有修改都不会引起回流，因为它已经不在渲染树了。
-
-有三种方式可以让DOM脱离文档流：
-
-* 隐藏元素，应用修改，重新显示
-* 使用文档片段(document fragment)在当前DOM之外构建一个子树，再把它拷贝回文档。
-* 将原始元素拷贝到一个脱离文档的节点中，修改节点后，再替换原始的元素。
-
-考虑我们要执行一段批量插入节点的代码：
-
-```javascript
-function appendDataToElement(appendToElement, data) {
-    let li;
-    for (let i = 0; i < data.length; i++) {
-    	li = document.createElement('li');
-        li.textContent = 'text';
-        appendToElement.appendChild(li);
-    }
-}
-
-const ul = document.getElementById('list');
-appendDataToElement(ul, data);
-```
-
-如果我们直接这样执行的话，由于每次循环都会插入一个新的节点，会导致浏览器回流一次。
-
-我们可以使用这三种方式进行优化:
-
-**隐藏元素，应用修改，重新显示**
-
-这个会在展示和隐藏节点的时候，产生两次重绘
-
-```javascript
-function appendDataToElement(appendToElement, data) {
-    let li;
-    for (let i = 0; i < data.length; i++) {
-    	li = document.createElement('li');
-        li.textContent = 'text';
-        appendToElement.appendChild(li);
-    }
-}
-const ul = document.getElementById('list');
-ul.style.display = 'none';
-appendDataToElement(ul, data);
-ul.style.display = 'block';
-```
-
-**使用文档片段(document fragment)在当前DOM之外构建一个子树，再把它拷贝回文档**
-
-```javascript
-const ul = document.getElementById('list');
-const fragment = document.createDocumentFragment();
-appendDataToElement(fragment, data);
-ul.appendChild(fragment);
-```
-
-**将原始元素拷贝到一个脱离文档的节点中，修改节点后，再替换原始的元素。**
-
-```javascript
-const ul = document.getElementById('list');
-const clone = ul.cloneNode(true);
-appendDataToElement(clone, data);
-ul.parentNode.replaceChild(clone, ul);
-```
-
-对于上述那种情况，我写了一个[demo](https://chenjigeng.github.io/example/share/%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E9%87%8D%E7%BB%98/%E6%89%B9%E9%87%8F%E4%BF%AE%E6%94%B9DOM.html)来测试修改前和修改后的性能。然而实验结果不是很理想。
-
-**原因：原因其实上面也说过了，浏览器会使用队列来储存多次修改，进行优化，所以对这个优化方案，我们其实不用优先考虑。**
-
-### 避免触发同步布局事件
-
-上文我们说过，当我们访问元素的一些属性的时候，会导致浏览器强制清空队列，进行强制同步布局。举个例子，比如说我们想将一个p标签数组的宽度赋值为一个元素的宽度，我们可能写出这样的代码：
-    
-```javascript
-function initP() {
-    for (let i = 0; i < paragraphs.length; i++) {
-        paragraphs[i].style.width = box.offsetWidth + 'px';
-    }
-}
-```
-
-这段代码看上去是没有什么问题，可是其实会造成很大的性能问题。在每次循环的时候，都读取了box的一个offsetWidth属性值，然后利用它来更新p标签的width属性。这就导致了每一次循环的时候，浏览器都必须先使上一次循环中的样式更新操作生效，才能响应本次循环的样式读取操作。每一次循环都会强制浏览器刷新队列。我们可以优化为:
-
-```javascript
-const width = box.offsetWidth;
-function initP() {
-    for (let i = 0; i < paragraphs.length; i++) {
-        paragraphs[i].style.width = width + 'px';
-    }
-}
-```
-
-同样，我也写了个[demo](https://chenjigeng.github.io/example/share/%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E9%87%8D%E7%BB%98/%E9%81%BF%E5%85%8D%E5%BF%AB%E9%80%9F%E8%BF%9E%E7%BB%AD%E7%9A%84%E5%B8%83%E5%B1%80.html)来比较两者的性能差异。你可以自己点开这个demo体验下。这个对比差距就比较明显。
-
-### 对于复杂动画效果,使用绝对定位让其脱离文档流
-
-对于复杂动画效果，由于会经常的引起回流重绘，因此，我们可以使用绝对定位，让它脱离文档流。否则会引起父元素以及后续元素频繁的回流。这个我们就直接上个[例子](https://chenjigeng.github.io/example/share/%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E9%87%8D%E7%BB%98/%E5%B0%86%E5%A4%8D%E6%9D%82%E5%8A%A8%E7%94%BB%E6%B5%AE%E5%8A%A8%E5%8C%96.html)。
-
-打开这个例子后，我们可以打开控制台，控制台上会输出当前的帧数(虽然不准)。
-![](../img/example_demo_animation.png)
-从上图中，我们可以看到，帧数一直都没到60。这个时候，只要我们点击一下那个按钮，把这个元素设置为绝对定位，帧数就可以稳定60。
-
-### css3硬件加速（GPU加速）
-
-比起考虑如何减少回流重绘，我们更期望的是，根本不要回流重绘。这个时候，css3硬件加速就闪亮登场啦！！
-
-**划重点：使用css3硬件加速，可以让transform、opacity、filters这些动画不会引起回流重绘 。但是对于动画的其它属性，比如background-color这些，还是会引起回流重绘的，不过它还是可以提升这些动画的性能。**
-
-本篇文章只讨论如何使用，暂不考虑其原理，之后有空会另外开篇文章说明。
-
-#### 如何使用
-
-常见的触发硬件加速的css属性：
-
-* transform
-* opacity
-* filters
-* Will-change
-
-#### 效果
-
-我们可以先看个[例子](https://chenjigeng.github.io/example/share/%E5%AF%B9%E6%AF%94gpu%E5%8A%A0%E9%80%9F/gpu%E5%8A%A0%E9%80%9F-transform.html)。我通过使用chrome的Performance捕获了一段时间的回流重绘情况，实际结果如下图：
-
-![](../img/render_result_1.png)
-
-从图中我们可以看出，在动画进行的时候，没有发生任何的回流重绘。如果感兴趣你也可以自己做下实验。
-
-#### 重点
-
-* 使用css3硬件加速，可以让transform、opacity、filters这些动画不会引起回流重绘
-* 对于动画的其它属性，比如background-color这些，还是会引起回流重绘的，不过它还是可以提升这些动画的性能。
-
-#### css3硬件加速的坑
-
-* 如果你为太多元素使用css3硬件加速，会导致内存占用较大，会有性能问题。
-* 在GPU渲染字体会导致抗锯齿无效。这是因为GPU和CPU的算法不同。因此如果你不在动画结束的时候关闭硬件加速，会产生字体模糊。
+* 如果文件的修改频率在秒级以下，Last-Modified/If-Modified-Since 会错误地返回 304
+* 如果文件被修改了，但是内容没有任何变化的时候，Last-Modified/If-Modified-Since 会错误地返回 304 ，上面的例子就说明了这个问题
 
 ## 总结
 
-本文主要讲了浏览器的渲染过程、浏览器的优化机制以及如何减少甚至避免回流和重绘，希望可以帮助大家更好的理解回流重绘。
+在实际使用场景中，比如政采云的官网。图片、不常变化的 JS 等静态资源都会使用缓存来提高页面的加载速度。例如政采云首页的顶部导航栏，埋点 SDK 等等。
 
-## 参考文献
- - [渲染树构建、布局及绘制](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/render-tree-construction?hl=zh-cn)
- - 高性能Javascript
+在文章的最后，我们再次回到这张流程图，这张图涵盖了 HTTP 缓存的整体流程，大家对整体流程熟悉后，也可以自己动手通过 Node 来验证下 HTTP 缓存。
+
+![tjhttp_11](../img/tjhttp_11.png)
