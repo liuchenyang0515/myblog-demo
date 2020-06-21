@@ -7,6 +7,7 @@
 本文先从浏览器的渲染过程来从头到尾的讲解一下回流重绘，如果大家想直接看如何减少回流和重绘，可以跳到后面。（这个渲染过程来自[MDN](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/render-tree-construction?hl=zh-cn)）
 
 ![DOM渲染](../img/dom_render.png)
+
 从上面这个图上，我们可以看到，浏览器渲染过程如下：
 
 1. 解析HTML，生成DOM树，解析CSS，生成CSSOM树
