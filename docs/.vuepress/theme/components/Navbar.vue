@@ -26,7 +26,7 @@
         'max-width': linksWrapMaxWidth + 'px'
       } : {}"
     >
-      <span>你好，欢迎来到宸洋博客&nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span>你好，砖业洋__持续为你分享&nbsp;&nbsp;&nbsp;&nbsp;</span>
       <AlgoliaSearchBox
         v-if="isAlgoliaSearch"
         :options="algolia"
