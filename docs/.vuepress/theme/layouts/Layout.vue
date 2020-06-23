@@ -49,6 +49,9 @@ import Navbar from '@theme/components/Navbar.vue'
 import Page from '@theme/components/Page.vue'
 import Sidebar from '@theme/components/Sidebar.vue'
 import { resolveSidebarItems } from '../util'
+import '../js/canvas-nest';
+
+
 
 export default {
   name: 'Layout',
@@ -149,3 +152,31 @@ export default {
   }
 }
 </script>
+<style scope>
+      * {
+        margin: 0;
+        padding: 0;
+
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+      }
+
+      /* #github-iframe {
+        position: fixed;
+        left: 32px;
+        top: 32px;
+      }
+
+      #area-render {
+        position: fixed;
+        width: 320px;
+        height: 160px;
+        right: 4px;
+        bottom: 4px;
+        border: dashed 1px #ccc;
+      } */
+</style>

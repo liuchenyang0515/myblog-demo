@@ -4,7 +4,7 @@
 
 假设有如下代码：
 
-```html
+```javascript
 <div>
       <p>FullName: {{fullName}}</p>
       <p>FirstName: <input type="text" v-model="firstName"></p>
