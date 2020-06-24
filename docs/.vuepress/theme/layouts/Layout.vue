@@ -5,6 +5,8 @@
     @touchstart="onTouchStart"
     @touchend="onTouchEnd"
   >
+    <component :is="dynamicComponent"></component>
+
     <Navbar
       v-if="shouldShowNavbar"
       @toggle-sidebar="toggleSidebar"
@@ -40,6 +42,7 @@
         <slot name="page-bottom" />
       </template>
     </Page>
+    
   </div>
 </template>
 
@@ -49,7 +52,7 @@ import Navbar from '@theme/components/Navbar.vue'
 import Page from '@theme/components/Page.vue'
 import Sidebar from '@theme/components/Sidebar.vue'
 import { resolveSidebarItems } from '../util'
-import '../js/canvas-nest';
+
 
 
 
@@ -65,6 +68,7 @@ export default {
 
   data () {
     return {
+      dynamicComponent: null,
       isSidebarOpen: false
     }
   },
@@ -122,6 +126,10 @@ export default {
     this.$router.afterEach(() => {
       this.isSidebarOpen = false
     })
+    this.dynamicComponent = require('../js/canvas-nest.js').default;
+    // import('../js/canvas-nest.js').then(module => {
+    //   this.dynamicComponent = module.default
+    // }) // 这个报警告
   },
 
   methods: {
