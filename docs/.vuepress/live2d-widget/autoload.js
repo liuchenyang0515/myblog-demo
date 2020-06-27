@@ -1,14 +1,22 @@
 // 注意：live2d_path 参数应使用绝对路径
-const live2d_path = "https://cdn.jsdelivr.net/gh/stevenjoezhang/live2d-widget@latest/";
+// const live2d_path = "https://cdn.jsdelivr.net/gh/stevenjoezhang/live2d-widget@latest/";
+
+
+/**
+ * 别的文件为参考，修改无效，因为其他文件都是在我的cdn而不在本仓库，修改本文件autoload.js有效，因为会调用
+ */
+
+const myVersion = "v0.1.5"; // 加不加v都可以访问
+const live2d_path = "https://cdn.jsdelivr.net/gh/liuchenyang0515/KBNSource@"+ myVersion +"/live2d-widget/";
 // const live2d_path = window.location.protocol + "//" + window.location.host + "/";
 // ======小人右边的可点击按钮
-// var head = document.getElementsByTagName('head')[0];
-// var link = document.createElement('link');
-// link.type = 'text/css';
-// link.rel = 'stylesheet';
-// link.href = 'https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css';
-// // link.href = './font-awesome.min.css' // 测试相对路径不行，因为有eof请求在线
-// head.appendChild(link);
+var head = document.getElementsByTagName('head')[0];
+var link = document.createElement('link');
+link.type = 'text/css';
+link.rel = 'stylesheet';
+link.href = "https://cdn.jsdelivr.net/gh/liuchenyang0515/KBNSource@" + myVersion+ "/live2d-widget/font-awesome.min.css";
+// link.href = './font-awesome.min.css' // 测试相对路径不行，因为有eof请求在线
+head.appendChild(link);
 // ======
 // 封装异步加载资源的方法
 function loadExternalResource(url, type) {
@@ -46,7 +54,7 @@ if (screen.width >= 768) {
 			waifuPath: live2d_path + "waifu-tips.json",
 			// waifuPath: __dirname +  "waifu-tips.json",
 			//apiPath: "https://live2d.fghrsh.net/api/",
-			cdnPath: "https://cdn.jsdelivr.net/gh/fghrsh/live2d_api/"
+			cdnPath: "https://cdn.jsdelivr.net/gh/liuchenyang0515/live2d_api/"
 		});
 	});
 }

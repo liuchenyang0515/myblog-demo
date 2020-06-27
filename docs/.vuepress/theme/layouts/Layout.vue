@@ -128,13 +128,13 @@ export default {
       this.isSidebarOpen = false
     })
     this.dynamicComponent = require('../js/canvas-nest.js').default;
-    this.kanbanniang = require('../../live2d-widget-master/autoload.js').default; 
+    this.kanbanniang = require('../../live2d-widget/autoload.js').default; 
     // 一定记得写.default，否则Failed to mount component: template or render function not defined.
 
-    // import('../../live2d-widget-master/autoload.js').then(module => {
+    // import('../../live2d-widget/autoload.js').then(module => {
     //   this.kanbanniang = module.default
     // }) // 这个报警告
-    // require("../../live2d-widget-master/font-awesome.css");
+    // require("../../live2d-widget/font-awesome.css");
     // import('../js/canvas-nest.js').then(module => {
     //   this.dynamicComponent = module.default
     // }) // 这个报警告
