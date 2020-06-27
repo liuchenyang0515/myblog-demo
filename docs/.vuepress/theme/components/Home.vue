@@ -50,7 +50,9 @@
     </div>
 
     <Content class="theme-default-content custom" />
-
+    <p style="text-align: right; padding: 16px 40px; color: #383a42; background: #fafafa; display: block; font-family: Operator Mono, Consolas, Monaco, Menlo, monospace; border-radius: 0px; font-size: 12px; -webkit-overflow-scrolling: touch; letter-spacing: 0px;">
+      梦虽虚幻，却是自己的梦想；屋虽简陋，却是自己的小家；志虽渺小，却是自己的追求。
+    </p>
     <div
       v-if="data.footer"
       class="footer"

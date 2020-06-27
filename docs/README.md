@@ -5,10 +5,10 @@ actionText: 博客目录预览 →
 actionLink: /category/category_1.html
 features:
 - title: 简洁至上
-  details: 极简主题
+  details: 可能域名访问比较慢，如果样式布局没有加载出来请多等待几秒，后续搬到gitee速度会更快
 - title: 博客说明
   details: 给大家带来更好的博文阅读体验，为大家筛选好文，收录于此博客，我不是啥牛人，是个砖业搬运工
 - title: 个人笔记
-  details: 自己在学习过程中也会有做笔记到CSDN，见顶部链接
+  details: 自己在学习过程中也会有做笔记总结到CSDN，在CSDN写过的博文就不搬到这里了～，详情请见顶部链接
 footer: MIT Licensed | Copyright © 2020-lcy
 ---
