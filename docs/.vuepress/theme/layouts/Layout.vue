@@ -7,6 +7,7 @@
   >
     <component :is="dynamicComponent"></component>
     <component :is="kanbanniang"></component>
+
     <Navbar
       v-if="shouldShowNavbar"
       @toggle-sidebar="toggleSidebar"
@@ -130,6 +131,7 @@ export default {
     this.dynamicComponent = require('../js/canvas-nest.js').default;
     this.kanbanniang = require('../../live2d-widget/autoload.js').default; 
     // 一定记得写.default，否则Failed to mount component: template or render function not defined.
+    require('../js/mytest.js');
 
     // import('../../live2d-widget/autoload.js').then(module => {
     //   this.kanbanniang = module.default
