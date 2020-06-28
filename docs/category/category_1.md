@@ -1,7 +1,8 @@
 # 学习目录
 ## 前端基础篇
 [1.图解HTTP缓存](../tech/tujiehttphuancun.html)  
-[2.你真的了解回流和重绘吗](../tech/nizhendeliaojiehuiliuhechonghuima.html)
+[2.你真的了解回流和重绘吗](../tech/nizhendeliaojiehuiliuhechonghuima.html)  
+[3.为什么getElementsByTagName比querySelectorAll方法快](../tech/为什么getElementsByTagName比querySelectorAll方法快.html)
 
 ## 框架篇
 ### Vue
