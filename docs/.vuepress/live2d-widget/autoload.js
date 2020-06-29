@@ -6,7 +6,7 @@
  * 别的文件为参考，修改无效，因为其他文件都是在我的cdn而不在本仓库，修改本文件autoload.js有效，因为会调用
  */
 
-const myVersion = "v0.1.8"; // 加不加v都可以访问
+const myVersion = "v0.1.9"; // 加不加v都可以访问
 const live2d_path = "https://cdn.jsdelivr.net/gh/liuchenyang0515/KBNSource@"+ myVersion +"/live2d-widget/";
 // const live2d_path = window.location.protocol + "//" + window.location.host + "/";
 // ======小人右边的可点击按钮
