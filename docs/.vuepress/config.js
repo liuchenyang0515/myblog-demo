@@ -8,7 +8,7 @@ module.exports = {
       nav:[ // 导航栏配置
         {text: '首页', link: '/' },
         // {text: '', link: '/' },
-        {text: 'CSDN主页', link: 'https://blog.csdn.net/qq_34115899'}      
+        {text: 'CSDN主页', link: 'https://liuchenyang0515.blog.csdn.net'}      
       ],
       sidebar: 'auto', // 侧边栏配置
       sidebarDepth:2
