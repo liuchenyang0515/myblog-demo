@@ -13,6 +13,7 @@
   "author": "liuchenyang",
   "license": "ISC",
   "dependencies": {
+    "@vssue/api-github-v3": "^1.4.4",
     "@vssue/api-github-v4": "^1.4.0",
     "@vssue/vuepress-plugin-vssue": "^1.4.6"
   }
