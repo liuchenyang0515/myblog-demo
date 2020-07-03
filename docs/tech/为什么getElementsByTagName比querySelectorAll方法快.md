@@ -211,3 +211,9 @@ console.log("querySelectorAll方法使用了" + (t3 - t2) + "毫秒.");
 [8]: https://www.sitepoint.com/discovering-the-high-resolution-time-api/
 [9]: https://jsperf.com/
 [10]: https://jsperf.com/getelementsby-vs-queryselectorall/7
+
+
+
+
+<br/>
+<Vssue />

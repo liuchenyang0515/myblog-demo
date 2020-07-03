@@ -11,5 +11,9 @@
   },
   "keywords": [],
   "author": "liuchenyang",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@vssue/api-github-v4": "^1.4.0",
+    "@vssue/vuepress-plugin-vssue": "^1.4.6"
+  }
 }

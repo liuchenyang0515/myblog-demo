@@ -152,3 +152,8 @@ ETag/If-None-Match 的出现主要解决了 Last-Modified/If-Modified-Since 所�
 在文章的最后，我们再次回到这张流程图，这张图涵盖了 HTTP 缓存的整体流程，大家对整体流程熟悉后，也可以自己动手通过 Node 来验证下 HTTP 缓存。
 
 ![tjhttp_11](../img/tjhttp_11.png)
+
+
+
+<br/>
+<Vssue />
